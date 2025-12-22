@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Myopia risk calculator based on AL/CR ratio and corneal radius">
+    <title>Myopia Risk Calculator 近视风险计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1rem;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            padding: 2.5rem 2rem;
+            color: white;
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+        
+        .header p {
+            opacity: 0.95;
+            font-size: 0.95rem;
+        }
+        
+        .content {
+            padding: 2.5rem 2rem;
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .input-wrapper input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        
+        .input-wrapper input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .input-unit {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.875rem;
+            color: #9ca3af;
+            font-weight: 500;
+            pointer-events: none;
+        }
+        
+        .input-hint {
+            margin-top: 0.375rem;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        
+        .sex-buttons {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .sex-button {
+            flex: 1;
+            padding: 0.875rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: white;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .sex-button:hover {
+            border-color: #cbd5e1;
+        }
+        
+        .sex-button.active {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            color: #1e40af;
+        }
+        
+        .results {
+            margin-top: 2rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 16px;
+            border: 1px solid #bae6fd;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .results h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0c4a6e;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.01em;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .result-card {
+            background: white;
+            padding: 1.25rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .result-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .result-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        
+        .risk-value {
+            font-size: 1.25rem;
+        }
+        
+        .probability-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .probability-display {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .probability-number {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+        
+        .probability-percent {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s ease-out;
+        }
+        
+        .footer {
+            margin-top: 2rem;
+            padding: 1.25rem;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .footer p {
+            font-size: 0.875rem;
+            color: #475569;
+            line-height: 1.6;
+        }
+        
+        .citation {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: white;
+            border-left: 4px solid #3b82f6;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #64748b;
+            line-height: 1.5;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 0.5rem;
+            }
+            
+            .header {
+                padding: 1.5rem 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .content {
+                padding: 1.5rem 1rem;
+            }
+            
+            .input-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .results {
+                padding: 1.5rem 1rem;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .probability-number {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <h1>Myopia Risk Calculator<br/>近视风险计算器</h1>
+            </div>
+            <p>Based on AL/CR ratio and corneal radius research model (AUC = 0.965)<br/>基于 AL/CR 比值和角膜曲率研究模型</p>
+        </div>
+
+        <div class="content">
+            <div class="input-grid">
+                <div class="input-group">
+                    <label>Axial Length (AL) 眼轴长度</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="al" step="0.01" value="23.5" min="20" max="28">
+                        <span class="input-unit">mm</span>
+                    </div>
+                    <p class="input-hint">Range 范围: 20-28 mm</p>
+                </div>
+
+                <div class="input-group">
+                    <label>Corneal Radius (CR) 角膜曲率</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="cr" step="0.01" value="7.85" min="6.5" max="9.5">
+                        <span class="input-unit">mm</span>
+                    </div>
+                    <p class="input-hint">Range 范围: 6.5-9.5 mm</p>
+                </div>
+
+                <div class="input-group">
+                    <label>Age 年龄</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="age" step="1" value="10" min="3" max="18">
+                        <span class="input-unit">years 岁</span>
+                    </div>
+                    <p class="input-hint">Range 范围: 3-18 years 岁</p>
+                </div>
+
+                <div class="input-group">
+                    <label>Sex 性别</label>
+                    <div class="sex-buttons">
+                        <button class="sex-button active" id="btn-male">Male 男</button>
+                        <button class="sex-button" id="btn-female">Female 女</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="results" style="display: none;"></div>
+
+            <div class="footer">
+                <p>
+                    <strong style="color: #1e293b;">Note 说明:</strong> This calculator is based on a large-scale cohort study of children and adolescents, suitable for myopia risk assessment in ages 3-18 years.
+                    <br/>本计算器基于大规模儿童青少年队列研究开发，适用于3-18岁儿童青少年的近视风险评估。
+                </p>
+                <div class="citation">
+                    <strong>Model Formula 模型公式:</strong><br/>
+                    logit(P) = −115.091 + 29.329 × AL/CR + 3.280 × CR − 0.019 × Age + 0.325 × Sex_Girls + 0.067 × (Age × Sex_Girls)
+                    <br/><br/>
+                    <strong>Model Performance 模型性能:</strong> AUC = 0.965
+                    <br/><br/>
+                    <strong>Application 适用范围:</strong> Clinical screening tool 临床筛查工具
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSex = 'male';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            calculate();
+        });
+        
+        document.getElementById('btn-male').addEventListener('click', function() {
+            currentSex = 'male';
+            document.getElementById('btn-male').classList.add('active');
+            document.getElementById('btn-female').classList.remove('active');
+            calculate();
+        });
+        
+        document.getElementById('btn-female').addEventListener('click', function() {
+            currentSex = 'female';
+            document.getElementById('btn-female').classList.add('active');
+            document.getElementById('btn-male').classList.remove('active');
+            calculate();
+        });
+        
+        document.getElementById('al').addEventListener('input', calculate);
+        document.getElementById('cr').addEventListener('input', calculate);
+        document.getElementById('age').addEventListener('input', calculate);
+        
+        function calculate() {
+            const al = parseFloat(document.getElementById('al').value);
+            const cr = parseFloat(document.getElementById('cr').value);
+            const age = parseFloat(document.getElementById('age').value);
+            
+            if (isNaN(al) || isNaN(cr) || isNaN(age)) {
+                document.getElementById('results').style.display = 'none';
+                return;
+            }
+            
+            if (al < 20 || al > 28 || cr < 6.5 || cr > 9.5 || age < 3 || age > 18) {
+                document.getElementById('results').style.display = 'none';
+                return;
+            }
+            
+            const alCrRatio = al / cr;
+            const sexGirls = currentSex === 'female' ? 1 : 0;
+            
+            const logit = -115.091 + 29.329 * alCrRatio + 3.280 * cr - 0.019 * age + 0.325 * sexGirls + 0.067 * (age * sexGirls);
+            const probability = 1 / (1 + Math.exp(-logit));
+            const percentage = (probability * 100).toFixed(1);
+            
+            let riskLevel = 'Low Risk 低风险';
+            let riskColor = 'rgb(34, 197, 94)';
+            if (probability > 0.7) {
+                riskLevel = 'High Risk 高风险';
+                riskColor = 'rgb(239, 68, 68)';
+            } else if (probability > 0.3) {
+                riskLevel = 'Moderate Risk 中风险';
+                riskColor = 'rgb(251, 146, 60)';
+            }
+            
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('results').innerHTML = `
+                <div class="results">
+                    <h2>Results 计算结果</h2>
+                    
+                    <div class="results-grid">
+                        <div class="result-card">
+                            <div class="result-label">AL/CR Ratio 比值</div>
+                            <div class="result-value">${alCrRatio.toFixed(3)}</div>
+                        </div>
+                        
+                        <div class="result-card">
+                            <div class="result-label">Risk Level 风险等级</div>
+                            <div class="result-value risk-value" style="color: ${riskColor}">${riskLevel}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="probability-card">
+                        <div class="result-label">Myopia Probability 近视概率</div>
+                        
+                        <div class="probability-display">
+                            <div class="probability-number" style="color: ${riskColor}">${percentage}</div>
+                            <div class="probability-percent">%</div>
+                        </div>
+                        
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${percentage}%; background: ${riskColor}"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
